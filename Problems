@@ -1,4 +1,4 @@
 POTENTIAL PROBLEMS
 
-The code is able to produce bi-directional edges
+The code is able to produce bi-directional edges (FIXED)
 The path displayed by djikstra seems wrong at times
