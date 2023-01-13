@@ -2,3 +2,6 @@ POTENTIAL PROBLEMS
 
 The code is able to produce bi-directional edges (FIXED)
 The path displayed by djikstra seems wrong at times
+
+# A complete graph contains N(N-1)/2 Edges
+# Nodes are distributed by a Poisson Point Process
