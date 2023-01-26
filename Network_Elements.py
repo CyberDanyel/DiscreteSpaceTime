@@ -8,6 +8,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, ArrowStyle
+import copy as cp
 
 #%%
 
@@ -34,6 +35,13 @@ class Node:
         self.vertex = vertex
         self.nodepatch = plt.Circle(self.r,0.01,fc='white')
         self.vertexpatch = plt.Circle(self.r,0.05,fc='white')
+        
+        self.source = False
+        self.sink = False
+        
+        if vertex == True:
+            self.source = True
+            self.sink = True
 
     def pos(self):
         return self.r
@@ -43,6 +51,18 @@ class Node:
             return self.nodepatch
         else:
             return self.vertexpatch
+        
+    def issource(self,cond=True):
+        self.source = cond
+        
+    def issink(self,cond=True):
+        self.sink = True
+        
+    def returnsource(self):
+        return self.source
+    
+    def returnsink(self):
+        return self.sink
     
 #%%
 
@@ -71,12 +91,14 @@ class Edge:
     
     def __init__(self,start=Node(position=np.array([0.0,0.0])),
                       end=Node(position=np.array([0.0,0.0]))):
+        self.s = start
+        self.e = end
         self.start = start.pos()
         self.end = end.pos()
 
         style = ArrowStyle("Fancy",head_length=5,head_width=5,tail_width=0.5)
         self.edgepatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='dodgerblue')
-        self.pathpatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='green')
+        self.shortpathpatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='green')
         self.longpathpatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='red')
         
     def dist(self):
@@ -86,10 +108,16 @@ class Edge:
     def edge_patch(self):
         return self.edgepatch
     
-    def path_patch(self):
-        return self.pathpatch
+    def shortpath_patch(self):
+        return self.shortpathpatch
     
     def longpath_patch(self):
         return self.longpathpatch
+    
+    def returnstart(self):
+        return self.s
+    
+    def returnend(self):
+        return self.e
     
 #%%

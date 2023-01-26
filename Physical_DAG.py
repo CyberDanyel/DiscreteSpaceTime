@@ -41,7 +41,6 @@ class DAG:
         self.n = n
         self.nodes = []
         self.edges = []
-
         self.distances = np.zeros((self.n,self.n))
         
         self.nodes.append(Node(position=np.array([0,0]),vertex=True))
@@ -50,29 +49,44 @@ class DAG:
             y = np.random.uniform(0,1)
             self.nodes.append(Node(position=np.array([x,y]),vertex=False))
         self.nodes.append(Node(position=np.array([1,1]),vertex=True))
-    #For Timethology (p = 1 if R < val, else p = 0)
+    
         for i in range(self.n):
             a = self.nodes[i]
             for j in range(self.n):
                 b = self.nodes[j]
                 edge = Edge(a,b)
-                if b.pos()[0] > a.pos()[0] and b.pos()[1] > a.pos()[1] and edge.dist() < 0.7:
+                f = edge.dist() # Radial Inclusion
+                #f = np.random.uniform(0,1) # Probabilistic Inclusion
+                P = 0.6
+                if b.pos()[0] > a.pos()[0] and b.pos()[1] > a.pos()[1] and f < P:
                     self.edges.append(edge)
+                    a.issource(cond=True)
+                    b.issink(cond=True)
                     self.distances[i][j] = edge.dist()
                 else:
-                    continue
+                    continue      
+                
+        self.nodes = [i for i in self.nodes if i.returnsource() == True or i.returnsink() == True]
+        self.n = len(self.nodes)
+                
+        # for i in self.nodes:
+        #     if i.returnsource() == False:
+        #         for j in self.nodes:
+        #             if j.pos()[0] > i.pos()[0] and j.pos()[1] > i.pos()[1]:
+        #                 edge = Edge(i,j)
+        #                 self.edges.append(edge)
+        #                 a.issource(cond=True)
+        #     if i.returnsink() == False:
+        #         for j in self.nodes:
+        #             if i.pos()[0] > j.pos()[0] and i.pos()[1] > j.pos()[1]:
+        #                 edge = Edge(j,i)
+        #                 self.edges.append(edge)
+        #                 b.issink(cond=True)
+
+        # Need to add a radius limitation on the above code
+        
         self.n_edges = len(self.edges)
-    #Just a set p value for each edge
-        for i in range(self.n):
-            a = self.nodes[i]
-            for j in range(self.n):
-                b = self.nodes[j]
-                randval = np.random.uniform(0,1)
-                if b.pos()[0] > a.pos()[0] and b.pos()[1] > a.pos()[1] and randval < 0.6: #p = this value
-                    self.edges.append(edge)
-                    self.distances[i][j] = edge.dist()
-                else:
-                    continue
+        
     def _djikstra(self):
         
         """
@@ -83,7 +97,6 @@ class DAG:
         wmat = self.distances
         start = 0
         end = self.n - 1
-        
         n = len(wmat)
         dist = [inf]*n
         dist[start] = wmat[start][start]
@@ -130,36 +143,38 @@ class DAG:
         print ('Longest Path:',self.path)
         print ('Distance:',-self.path_distance)
         
-    def draw(self, shortest = False, longest = False):
+    def draw(self,shortest=False,longest=False):
             
-            with plt.style.context('dark_background'):
-                plt.figure(dpi=540)
-                ax = plt.axes(xlim=(0,1),ylim=(0,1))
-                ax.set_aspect('equal',adjustable='box')
-                ax.get_xaxis().set_visible(False)
-                ax.get_yaxis().set_visible(False)
-                for i in range(self.n):
-                    ax.add_patch(self.nodes[i].patch())
-                for i in range(self.n_edges):
-                    ax.add_patch(self.edges[i].edge_patch())
-                t = np.linspace(0,1,2)
-                plt.plot(t,t,color='white',ls='dashed')
-            if shortest == True:
-                self._djikstra()
-                for i in range(len(self.path)-1):
-                    a = Edge(self.nodes[self.path[i]],self.nodes[self.path[i+1]])
-                    ax.add_patch(a.path_patch())
-            if longest == True:
-                self.distances = - self.distances
-                self._djikstra()
-                for i in range(len(self.path)-1):
-                    a = Edge(self.nodes[self.path[i]],self.nodes[self.path[i+1]])
-                    ax.add_patch(a.longpath_patch())
-                self.distances = - self.distances
+        with plt.style.context('dark_background'):
+            plt.figure(dpi=540)
+            ax = plt.axes(xlim=(0,1),ylim=(0,1))
+            ax.set_aspect('equal',adjustable='box')
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            for i in range(self.n):
+                ax.add_patch(self.nodes[i].patch())
+            for i in range(self.n_edges):
+                ax.add_patch(self.edges[i].edge_patch())
+            t = np.linspace(0,1,2)
+            plt.plot(t,t,color='white',ls='dashed')
+        if shortest == True:
+            self._djikstra()
+            for i in range(len(self.path)-1):
+                a = Edge(self.nodes[self.path[i]],self.nodes[self.path[i+1]])
+                ax.add_patch(a.shortpath_patch())
+        if longest == True:
+            self.distances = - self.distances
+            self._djikstra()
+            for i in range(len(self.path)-1):
+                a = Edge(self.nodes[self.path[i]],self.nodes[self.path[i+1]])
+                ax.add_patch(a.longpath_patch())
+            self.distances = - self.distances
+    
 #%%
 
-DAG1 = DAG(20)
-DAG1.draw(shortest = True, longest = True)
-DAG1.show_shortest()
-DAG1.show_longest()
+X = DAG(20)
+X.draw(shortest=True,longest=True)
+X.show_shortest()
+X.show_longest()
+
 #%%
