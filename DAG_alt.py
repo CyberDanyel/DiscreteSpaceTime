@@ -41,28 +41,38 @@ class DAG:
         self.n = n
         self.nodes = []
         self.edges = []
-        
-        M = np.random.randint(2,size=(self.n,self.n))
-        M[0][self.n-1] = 0
-        #Test for correct distance:
-        #M[0][self.n-1] = 1
-        self.Adjacency = np.triu(M,+1)
-        self.n_edges = np.sum(self.Adjacency)
+
         self.distances = np.zeros((self.n,self.n))
-                
+        
         self.nodes.append(Node(position=np.array([0,0]),vertex=True))
         for i in range(self.n - 2):
             x = np.random.uniform(0,1)
             y = np.random.uniform(0,1)
             self.nodes.append(Node(position=np.array([x,y]),vertex=False))
         self.nodes.append(Node(position=np.array([1,1]),vertex=True))
-
-        x = np.asarray(np.where(self.Adjacency == 1))
-        for i in range(self.n_edges):
-            a = Edge(self.nodes[x[0][i]],self.nodes[x[1][i]])
-            self.edges.append(a)
-            self.distances[x[0][i]][x[1][i]] = a.dist()
-
+    #For Timethology (p = 1 if R < val, else p = 0)
+        for i in range(self.n):
+            a = self.nodes[i]
+            for j in range(self.n):
+                b = self.nodes[j]
+                edge = Edge(a,b)
+                if b.pos()[0] > a.pos()[0] and b.pos()[1] > a.pos()[1] and edge.dist() < 0.7:
+                    self.edges.append(edge)
+                    self.distances[i][j] = edge.dist()
+                else:
+                    continue
+        self.n_edges = len(self.edges)
+    #Just a set p value for each edge
+        for i in range(self.n):
+            a = self.nodes[i]
+            for j in range(self.n):
+                b = self.nodes[j]
+                randval = np.random.uniform(0,1)
+                if b.pos()[0] > a.pos()[0] and b.pos()[1] > a.pos()[1] and randval < 0.6: #p = this value
+                    self.edges.append(edge)
+                    self.distances[i][j] = edge.dist()
+                else:
+                    continue
     def _djikstra(self):
         
         """
@@ -148,7 +158,7 @@ class DAG:
                 self.distances = - self.distances
 #%%
 
-DAG1 = DAG(7)
+DAG1 = DAG(20)
 DAG1.draw(shortest = True, longest = True)
 DAG1.show_shortest()
 DAG1.show_longest()

@@ -76,7 +76,8 @@ class Edge:
 
         style = ArrowStyle("Fancy",head_length=5,head_width=5,tail_width=0.5)
         self.edgepatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='dodgerblue')
-        self.pathpatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='magenta')
+        self.pathpatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='green')
+        self.longpathpatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='red')
         
     def dist(self):
         self.distance = np.linalg.norm(self.start-self.end)
@@ -87,5 +88,8 @@ class Edge:
     
     def path_patch(self):
         return self.pathpatch
+    
+    def longpath_patch(self):
+        return self.longpathpatch
     
 #%%
