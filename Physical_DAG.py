@@ -40,7 +40,7 @@ class DAG:
     def __init__(self,n):
         self.n = n
         self.nodes = []
-        self.edges = []
+        self.edges = [[None for x in range(self.n)] for y in range(self.n)]
         self.distances = np.zeros((self.n,self.n))
         
         self.nodes.append(Node(position=np.array([0,0]),vertex=True))
@@ -59,34 +59,44 @@ class DAG:
                 #f = np.random.uniform(0,1) # Probabilistic Inclusion
                 P = 0.6
                 if b.pos()[0] > a.pos()[0] and b.pos()[1] > a.pos()[1] and f < P:
-                    self.edges.append(edge)
+                    self.edges[i][j] = edge
+                    self.distances[i][j] = edge.dist()
                     a.issource(cond=True)
                     b.issink(cond=True)
-                    self.distances[i][j] = edge.dist()
                 else:
                     continue      
-                
-        self.nodes = [i for i in self.nodes if i.returnsource() == True or i.returnsink() == True]
-        self.n = len(self.nodes)
-                
-        # for i in self.nodes:
-        #     if i.returnsource() == False:
-        #         for j in self.nodes:
-        #             if j.pos()[0] > i.pos()[0] and j.pos()[1] > i.pos()[1]:
-        #                 edge = Edge(i,j)
-        #                 self.edges.append(edge)
-        #                 a.issource(cond=True)
-        #     if i.returnsink() == False:
-        #         for j in self.nodes:
-        #             if i.pos()[0] > j.pos()[0] and i.pos()[1] > j.pos()[1]:
-        #                 edge = Edge(j,i)
-        #                 self.edges.append(edge)
-        #                 b.issink(cond=True)
+        
+        unfiltered_nodes = np.array(self.nodes)  
+        self.nodes = np.array(self.nodes)        
+        u = True
+        while u == True:
+            lowdegree = [i for i in self.nodes if i.returnsource() == False or i.returnsink() == False]
+            if len(lowdegree) == 0:
+                u = False
+            else:
+                index = []
+                for i in lowdegree:
+                    index.append(np.argwhere(i==self.nodes)[0][0])
+                for i in index:
+                    self.nodes[i].issource(cond=False)
+                    self.nodes[i].issink(cond=False)
+                self.nodes = [i for i in self.nodes if i not in lowdegree]
+                index = []
+                for i in lowdegree:
+                    index.append(np.argwhere(i==unfiltered_nodes)[0][0])
+                for i in index:
+                    for j in range(self.n):
+                        self.edges[i][j] = None
+                        self.edges[j][i] = None
+                        self.distances[i][j] = 0
+                        self.distances[j][i] = 0
+    
+        self.edges = [i for x in self.edges for i in x]
+        self.edges = [i for i in self.edges if i != None]
 
-        # Need to add a radius limitation on the above code
-        
+        self.n = len(self.nodes)    
         self.n_edges = len(self.edges)
-        
+                
     def _djikstra(self):
         
         """
