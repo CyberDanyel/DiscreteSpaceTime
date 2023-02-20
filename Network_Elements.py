@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, ArrowStyle
 import copy as cp
+from math import inf
 
 #%%
 
@@ -30,7 +31,7 @@ class Node:
     
     '''
     
-    def __init__(self,position=np.array([0.0,0.0]),vertex=False):
+    def __init__(self,position=np.array([0.0,0.0]),vertex=False, identifier = None, visited = False):
         self.r = position
         self.vertex = vertex
         self.nodepatch = plt.Circle(self.r,0.01,fc='white')
@@ -38,6 +39,11 @@ class Node:
         
         self.source = False
         self.sink = False
+        self.identifier = identifier
+        self.connected_nodes = []
+        self.tentative_distance = inf
+        self.visited = visited
+        self.previous_vertex = None
         
         if vertex == True:
             self.source = True
@@ -64,6 +70,35 @@ class Node:
     def returnsink(self):
         return self.sink
     
+    def connect(self,connected_node):
+        self.connected_nodes.append(connected_node)
+        
+    def neighbours(self):
+        return self.connected_nodes
+    
+    def set_identifier(self,new_identifier):
+        self.identifier = new_identifier
+        
+    def identifier(self):
+        return self.identifier
+    
+    def tentative_distance(self):
+        return self.tentative_distance
+    
+    def set_tentative_distance(self,new_tentative_distance):
+        self.tentative_distance = new_tentative_distance
+        
+    def returnvisited(self):
+        return self.visited
+    
+    def mark_visited(self):
+        self.visited = True
+        
+    def mark_unvisited(self):
+        self.visited = False
+        
+    def set_previous_vertex(self, new_previous_vertex):
+        self.previous_vertex = new_previous_vertex
 #%%
 
 class Edge:
@@ -101,8 +136,14 @@ class Edge:
         self.shortpathpatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='green')
         self.longpathpatch = FancyArrowPatch(self.start,self.end,arrowstyle=style,color='red')
         
-    def dist(self):
-        self.distance = np.linalg.norm(self.start-self.end)
+    def dist(self,p_values):
+        self.distance = []
+        for i in range(len(p_values)):
+            if p_values[i] == 2:
+                self.distance.append(np.linalg.norm(self.start-self.end))
+            else:
+                self.distance.append(((self.end[0] - self.start[0])**p_values[i]+(self.end[1] - self.start[1])**p_values[i])**(1/p_values[i]))
+        
         return self.distance
         
     def edge_patch(self):
