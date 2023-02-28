@@ -1,29 +1,46 @@
 '''
                         GANGA SINGH MANCHANDA
+                        DANIEL GAIVAO LOZANO
                         Imperial College London
                         February 2023
 '''
 #%%
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.transforms import Affine2D
+import mpl_toolkits.axisartist.floating_axes as floating_axes
 from collections import *
-import random
 
 #%%
 
 class DAG:
     
-    def __init__(self,N):
+    '''
+    To Do:
+        - Reduce the DAG to the interval
+        - Return the path taken, not just distance
+        - Implement Minkowski distance for varying p
+        - Carry out investigations for varying p
+        - Graph nodes, shortest and longest paths and geodesic
+        - Implement CHI2 measure of path deviation from geodesic
+        - Fix plotting of space-time events
+    '''
+    
+    def __init__(self,N,show=False):
         # Initialise dictionary structures
         self.N = N
         self.nodes = defaultdict(list)
         self.adj = defaultdict(list)
+        np.random.seed(1)
         
         # Generate random nodes
+        t,s = [],[]
         self.nodes[0].append([0,0])
         for i in range(1,self.N-1):
-            x = np.random.uniform(0,1)
-            y = np.random.uniform(0,1)
+            x,y = np.random.uniform(0,1,2)
+            t.append(x)
+            s.append(y)
             self.nodes[i].append([x,y])
         self.nodes[self.N-1].append([1,1])
         
@@ -44,7 +61,7 @@ class DAG:
                 else:
                     continue    
                 
-        # Reduce generated DAG to interval
+        # # Reduce generated DAG to interval
         # while True:
         #     # Delete nodes with no outgoing edges
         #     count = 0
@@ -70,7 +87,25 @@ class DAG:
         #         break
         #     else:
         #         continue
-            
+        # self.N = len(self.nodes)
+        
+        if show == True:
+            with plt.style.context('ggplot'):
+                fig = plt.figure(dpi=540)
+                tr = Affine2D().scale(1,1).rotate_deg(45)
+                grid_helper = floating_axes.GridHelperCurveLinear(tr,extremes=(0,1,0,1))
+                ax = floating_axes.FloatingSubplot(fig,111,grid_helper=grid_helper)
+                aux_ax = ax.get_aux_axes(tr)
+                fig.add_subplot(ax)
+                ax.grid(False)
+                ax.set_xlabel(r'$ct$')
+                ax.set_ylabel(r'$x$')
+                aux_ax.plot(t,s,'.',color='magenta')
+                n = np.linspace(0,1,10)
+                aux_ax.plot(n,n,color='dodgerblue')
+                #ax.legend()
+                plt.show()
+
     def tSort(self,v,visited,stack):        
         # Mark current node as visited
         visited[v] = True
@@ -141,10 +176,9 @@ class DAG:
                         dist[i[0]] = dist[u] + i[1]
 
         print (dist[self.N-1])
- 
 
 #%%
 
-X = DAG(1000)
+X = DAG(1000,show=True)
 X.short()
 X.long()
