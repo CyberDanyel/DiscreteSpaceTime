@@ -286,13 +286,44 @@ class DAG:
             for i in range(len(self.path)-1):
                 a = Edge(self.nodes[self.path_identities[i]],self.nodes[self.path_identities[i+1]])
                 ax.add_patch(a.longpath_patch())
+                
+    def topologicalSortUtil(self,v,Stack,visited,adj):
+        visited[v] = True
+        for i in adj[v]:
+            if (not visited[i[0]]):
+                self.topologicalSortUtil(i[0],Stack,visited,adj)
+        Stack.append(v)
+
+    def longestPath(self,V,Stack,visited,adj):
+        dist = [-10**9 for i in range(V)]
+        for i in range(V):
+            if (visited[i] == False):
+                self.topologicalSortUtil(i,Stack,visited,adj)
+        dist[0] = 0
+        while (len(Stack) > 0):
+            u = Stack[-1]
+            del Stack[-1]
+            if (dist[u] != 10**9):
+                for i in adj[u]:
+                    if (dist[i[0]] < dist[u] + i[1]):
+                        dist[i[0]] = dist[u] + i[1]
+        print('Long',dist[V-1])
+        
+    def long(self):
+        V, Stack, visited = self.n, [], [False for i in range(self.n+1)]
+        adj = [[] for i in range(self.n+1)]
+        for i in range(self.n):
+            for j in range(self.n):
+                if self.distances[i][j] != 0:
+                    adj[i].append([j,self.distances[i][j]])
+        self.longestPath(V,Stack,visited,adj)
     
 #%%
 
-X = DAG(15)
-X.draw(shortest=True, longest = True)
+X = DAG(25)
+X.draw(shortest=True, longest = False)
 X.show_shortest_new(findpath = True)
-X.show_longest_new(findpath = True)
-
+#X.show_longest_new(findpath = True)
+X.long()
 
 #%%
