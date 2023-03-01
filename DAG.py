@@ -287,6 +287,29 @@ class DAG:
         longest_norm_vals = [i/j for i,j in zip(vals,geodesic_vals)]
         plt.plot(keys, longest_norm_vals, 'x', color = 'red')
         plt.axvline(x=1, color='r', linestyle='-')
+        
+    def show_all(self,ps):
+        for p in ps:
+            with plt.style.context('ggplot'):
+                fig = plt.figure(dpi=540)
+                tr = Affine2D().scale(1,1).rotate_deg(45)
+                grid_helper = floating_axes.GridHelperCurveLinear(tr,extremes=(0,1,0,1))
+                ax = floating_axes.FloatingSubplot(fig,111,grid_helper=grid_helper)
+                aux_ax = ax.get_aux_axes(tr)
+                fig.add_subplot(ax)
+                ax.grid(False)
+                ax.set_xlabel(r'$ct$')
+                ax.set_ylabel(r'$x$')
+                aux_ax.plot(self.t,self.s,'.',color='magenta')
+                n = np.linspace(0,1,10)
+                aux_ax.plot(n,n,color='dodgerblue')
+                for i in range(self.N-1):
+                    for j in range(len(self.adj[i])):
+                        aux_ax.arrow(self.nodes[i][0],self.nodes[i][1],self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0],self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1],length_includes_head = True, color = 'black')
+                for i in range(len(self.longpaths[p])-1):
+                    aux_ax.arrow(self.nodes[self.longpaths[p][i]][0],self.nodes[self.longpaths[p][i]][1],self.nodes[self.longpaths[p][i+1]][0]-self.nodes[self.longpaths[p][i]][0],self.nodes[self.longpaths[p][i+1]][1]-self.nodes[self.longpaths[p][i]][1], length_includes_head = True, color = 'red')
+                for i in range(len(self.shortpaths[p])-1):
+                    aux_ax.arrow(self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i]][1],self.nodes[self.shortpaths[p][i+1]][0]-self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i+1]][1]-self.nodes[self.shortpaths[p][i]][1], length_includes_head = True, color = 'green')
 
 #%%
 ps = np.linspace(0.75,1.25,num = 50)
@@ -295,4 +318,5 @@ X.minkowski([0.5,1.5])
 X.short(findpath = True, displayps = [0.5,2])
 X.long(findpath = True, displayps = [0.5,2])
 X.distance_comparison()
+X.show_all([0.5,2])
 
