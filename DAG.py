@@ -8,7 +8,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, ArrowStyle
+from matplotlib.patches import FancyArrowPatch,ArrowStyle
 from collections import *
 
 #%%
@@ -17,10 +17,10 @@ class DAG:
     
     '''
     To Do:
-        - Reduce the DAG to the interval
-        - Carry out investigations for varying p
-        - Implement CHI2 measure of path deviation from geodesic
+        - Reduce DAG to the interval
+        - Investigate path along greatest number of edges
     '''
+    
     def __init__(self,N):
         # Initialise dictionary structures
         self.N = N
@@ -95,8 +95,7 @@ class DAG:
         # self.N = len(self.nodes)
                 
     def minkowski(self,ps):
-        for i in range(len(ps)):
-            p = ps[i]
+        for p in ps:
             self.geodesic_dic[p] = ((self.nodes[self.N-1][0]-self.nodes[0][0])**p + (self.nodes[self.N-1][1]-self.nodes[0][1])**p)**(1/p)
             for i in range(self.N-1):
                 for j in range(len(self.adj[i])):
@@ -188,27 +187,11 @@ class DAG:
                     if previous_node == 0:
                         break
                 self.longpaths[p] = self.longpaths[p][::-1]
-                    
-    def distance_comparison(self):
-        self.short()
-        keys = list(self.shortest_dic.keys())
-        vals = [self.shortest_dic[j] for j in keys]
-        geodesic_vals = [self.geodesic_dic[j] for j in keys]
-        shortest_norm_vals = [i/j for i,j in zip(vals,geodesic_vals)]
-        plt.figure()
-        plt.plot(keys, shortest_norm_vals, 'x', color = 'green')
-        plt.axvline(x=1, color='r', linestyle='-')
-        self.long()
-        keys = list(self.longest_dic.keys())
-        vals = [self.longest_dic[j] for j in keys]
-        longest_norm_vals = [i/j for i,j in zip(vals,geodesic_vals)]
-        plt.plot(keys, longest_norm_vals, 'x', color = 'red')
-        plt.axvline(x=1, color='r', linestyle='-')
         
     def show(self,ps):
         for p in ps:
             with plt.style.context('ggplot'):
-                plt.figure(dpi=1080)
+                plt.figure(dpi=540)
                 ax = plt.gca()
                 ax.set_aspect('equal',adjustable='box')
                 plt.grid(False)
@@ -227,12 +210,60 @@ class DAG:
                     plt.arrow(self.nodes[self.longpaths[p][i]][0],self.nodes[self.longpaths[p][i]][1],self.nodes[self.longpaths[p][i+1]][0]-self.nodes[self.longpaths[p][i]][0],self.nodes[self.longpaths[p][i+1]][1]-self.nodes[self.longpaths[p][i]][1],width=0.005,length_includes_head=True,color='darkorange')
                 for i in range(len(self.shortpaths[p])-1):
                     plt.arrow(self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i]][1],self.nodes[self.shortpaths[p][i+1]][0]-self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i+1]][1]-self.nodes[self.shortpaths[p][i]][1],width=0.005,length_includes_head=True,color='dodgerblue')
-
+                    
+    def l_scaling(self):
+        self.short()
+        s_keys = list(self.shortest_dic.keys())
+        s_vals = [self.shortest_dic[j] for j in s_keys]
+        s_geodesic_vals = [self.geodesic_dic[j] for j in s_keys]
+        s_norm_vals = [i/j for i,j in zip(s_vals,s_geodesic_vals)]
+        self.long()
+        l_keys = list(self.longest_dic.keys())
+        l_vals = [self.longest_dic[j] for j in l_keys]
+        l_geodesic_vals = [self.geodesic_dic[j] for j in l_keys]
+        l_norm_vals = [i/j for i,j in zip(l_vals,l_geodesic_vals)]
+        with plt.style.context('ggplot'):
+            plt.figure(dpi=540)
+            plt.grid(False)
+            plt.xlabel(r'$p$')
+            plt.ylabel(r'$\frac{\ell}{\sqrt{2}}$')
+            plt.plot(s_keys,s_norm_vals,'.',color='dodgerblue',label='Shortest')
+            plt.plot(l_keys,l_norm_vals,'.',color='darkorange',label='Longest')
+            plt.axvline(x=1,color='black',linestyle='--')
+            plt.legend()
+            plt.show()
+            
+    def rss_scaling(self,ps):
+        s_rss = defaultdict(list)
+        l_rss = defaultdict(list)
+        for p in ps:
+            s_rss[p] = 0
+            l_rss[p] = 0
+            shortpath = self.shortpaths[p]
+            longpath = self.longpaths[p]
+            for i in range(len(shortpath)):
+                s_rss[p] += ((self.nodes[shortpath[i]][1] - self.nodes[shortpath[i]][0])**2)
+            for i in range(len(longpath)):    
+                l_rss[p] += ((self.nodes[longpath[i]][1] - self.nodes[longpath[i]][0])**2)  
+        s = [s_rss[j] for j in ps]
+        l = [l_rss[j] for j in ps]
+        with plt.style.context('ggplot'):
+            plt.figure(dpi=540)
+            plt.grid(False)
+            plt.xlabel(r'$p$')
+            plt.ylabel(r'$\sum(y_i-x_i)^2$')
+            plt.plot(ps,s,'.',color='dodgerblue',label='Shortest')
+            plt.plot(ps,l,'.',color='darkorange',label='Longest')
+            plt.axvline(x=1,color='black',linestyle='--')
+            plt.legend()
+            plt.show()
+ 
 #%%
-ps = np.linspace(0.75,1.25,50)
+
+ps = np.linspace(-10,10,1000)
 X = DAG(100)
 X.minkowski(ps)
 X.short(True,ps)
 X.long(True,ps)
-X.distance_comparison()
-X.show(ps)
+X.l_scaling()
+X.rss_scaling(ps)
