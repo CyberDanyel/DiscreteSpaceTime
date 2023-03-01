@@ -187,6 +187,42 @@ class DAG:
                     if previous_node == 0:
                         break
                 self.longpaths[p] = self.longpaths[p][::-1]
+<<<<<<< HEAD
+=======
+                    
+    def distance_comparison(self):
+        keys = list(self.shortest_dic.keys())
+        vals = [self.shortest_dic[j] for j in keys]
+        geodesic_vals = [self.geodesic_dic[j] for j in keys]
+        shortest_norm_vals = [i/j for i,j in zip(vals,geodesic_vals)]
+        plt.figure()
+        plt.plot(keys, shortest_norm_vals, 'x', color = 'green')
+        plt.axvline(x=1, color='r', linestyle='-')
+        keys = list(self.longest_dic.keys())
+        vals = [self.longest_dic[j] for j in keys]
+        longest_norm_vals = [i/j for i,j in zip(vals,geodesic_vals)]
+        plt.plot(keys, longest_norm_vals, 'x', color = 'red')
+        plt.axvline(x=1, color='r', linestyle='-')
+    
+    def chi2_comparison_y(self,ps):
+        shortchi2 = defaultdict(list)
+        longchi2 = defaultdict(list)
+        for p in ps:
+            shortchi2[p] = 0
+            longchi2[p] = 0
+            shortpath = self.shortpaths[p]
+            longpath = self.longpaths[p]
+            for i in range(len(shortpath)):
+                shortchi2[p] = shortchi2[p] + ((self.nodes[shortpath[i]][1] - self.nodes[shortpath[i]][0])**2)
+            for i in range(len(longpath)):    
+                longchi2[p] = longchi2[p] + ((self.nodes[longpath[i]][1] - self.nodes[longpath[i]][0])**2) 
+                
+        shortchi2s = [shortchi2[j] for j in ps]
+        longchi2s = [longchi2[j] for j in ps]
+        plt.figure()
+        plt.plot(ps,shortchi2s,'x',color='green')
+        plt.plot(ps,longchi2s,'x',color='red')
+>>>>>>> 41625d5fc8a53cf2f35a80d42319194e43783483
         
     def show(self,ps):
         for p in ps:
@@ -265,5 +301,11 @@ X = DAG(100)
 X.minkowski(ps)
 X.short(True,ps)
 X.long(True,ps)
+<<<<<<< HEAD
 X.l_scaling()
 X.rss_scaling(ps)
+=======
+X.distance_comparison()
+X.chi2_comparison_y(ps)
+X.show([0.75,1.25])
+>>>>>>> 41625d5fc8a53cf2f35a80d42319194e43783483
