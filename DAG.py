@@ -18,7 +18,8 @@ class DAG:
     '''
     To Do:
         - Reduce DAG to the interval
-        - Investigate path along greatest number of edges
+        - Investigate path along greatest and least number of edges
+        - Implement measure of jaggedness
     '''
     
     def __init__(self,N):
@@ -55,7 +56,7 @@ class DAG:
                 dy = sink[1] - source[1]
                 if dx > 0 and dy > 0:
                     dist = np.sqrt((dx * dx) + (dy * dy))
-                    R = 1
+                    R = 3 / np.sqrt(self.N)
                     if dist < R: 
                         d_dict = defaultdict(list)
                         d_dict[2] = dist
@@ -101,7 +102,7 @@ class DAG:
                 for j in range(len(self.adj[i])):
                     dist = ((self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0])**p+(self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1])**p)**(1/p)
                     self.adj[i][j][1][p] = dist
-                    
+
     def tSort(self,v,visited,stack):        
         # Mark current node as visited
         visited[v] = True
@@ -260,8 +261,8 @@ class DAG:
  
 #%%
 
-ps = np.linspace(-10,10,1000)
-X = DAG(100)
+ps = np.linspace(0.5,2.5,1000)
+X = DAG(10000)
 X.minkowski(ps)
 X.short(True,ps)
 X.long(True,ps)
