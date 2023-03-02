@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch,ArrowStyle
 from collections import *
+from copy import deepcopy
 
 #%%
     
@@ -28,13 +29,18 @@ class DAG:
         self.nodes = defaultdict(list)
         self.adj = defaultdict(list)
         self.shortest_dic = defaultdict(list)
+        self.shortestNone_dic = defaultdict(list)
         self.longest_dic = defaultdict(list)
+        self.longestNone_dic = defaultdict(list)
         self.geodesic_dic = defaultdict(list)
-        self.shortestnodespdic = defaultdict(list)
         self.shortpaths = defaultdict(list)
+        self.shortpathsNone = defaultdict(list)
         self.shortestnodespdic = [defaultdict(list) for i in range(self.N)]
+        self.shortestnodesNonedic = defaultdict(list)
         self.longpaths = defaultdict(list)
+        self.longpathsNone = defaultdict(list)
         self.longestnodespdic = [defaultdict(list) for i in range(self.N)]
+        self.longestnodesNonedic = defaultdict(list)
         np.random.seed(1)
         
         # Generate random nodes
@@ -59,13 +65,14 @@ class DAG:
                     R = 3 / np.sqrt(self.N)
                     if dist < R: 
                         d_dict = defaultdict(list)
-                        d_dict[2] = dist
+                        #d_dict[2] = dist
                         self.geodesic_dic[2] = np.sqrt(2)
                         self.adj[i].append([j,d_dict])
                     else:
                         continue
                 else:
-                    continue    
+                    continue
+
         
         # # Reduce generated DAG to interval
         # while True:
@@ -102,7 +109,7 @@ class DAG:
                 for j in range(len(self.adj[i])):
                     dist = ((self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0])**p+(self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1])**p)**(1/p)
                     self.adj[i][j][1][p] = dist
-
+    
     def tSort(self,v,visited,stack):        
         # Mark current node as visited
         visited[v] = True
@@ -113,7 +120,7 @@ class DAG:
                     self.tSort(node,visited,stack)
         # Push current node to stack which stores topological sort
         stack.append(v)
-
+        
     def short(self,findpath=False,ps=None): 
         # Initialize distances to all nodes as infinite and
         # distance to source as 0
@@ -174,9 +181,9 @@ class DAG:
                         if (dist[i[0]] < dist[u] + i[1][p]):
                             dist[i[0]] = dist[u] + i[1][p]
                             if findpath == True:
-                                self.longestnodespdic[i[0]][p] = u               
+                                self.longestnodespdic[i[0]][p] = u
                     self.longest_dic[p] = dist[self.N-1]
-            self.longest_dic[p] = dist[self.N-1]
+            #self.longest_dic[p] = dist[self.N-1]
         if findpath == True:
             for p in ps:
                 j = self.N - 1
@@ -188,7 +195,74 @@ class DAG:
                     if previous_node == 0:
                         break
                 self.longpaths[p] = self.longpaths[p][::-1]
-        
+
+
+    def shortnum(self,ps):
+            visited = [False]*self.N
+            stack =[]
+            # Call tSort to store Topological Sort starting from source
+            for i in range(self.N):
+                if visited[i] == False:
+                    self.tSort(0,visited,stack)
+            dist = [float("Inf")] * (self.N)
+            dist[0] = 0
+            # Process nodes in topological order
+            while stack:
+                # Get the next node from topological order
+                i = stack.pop()
+                # Update distances of all adjacent nodes
+                for node,weights in self.adj[i]:
+                    if dist[node] > dist[i] + 1:
+                        dist[node] = dist[i] + 1                      
+                        self.shortestnodesNonedic[node] = i            
+                self.shortestNone_dic[None] = dist[self.N-1]
+
+            j = self.N - 1
+            self.shortpathsNone[None].append(j)
+            while True:
+                previous_node = self.shortestnodesNonedic[j]
+                self.shortpathsNone[None].append(previous_node)
+                j = previous_node
+                if previous_node == 0:
+                    break
+            self.shortpathsNone[None] = self.shortpathsNone[None][::-1]
+
+    def longnum(self,ps):
+        # Mark all nodes as not visited
+        visited = [False]*self.N
+        stack =[]
+        dist = [-10**9 for i in range(self.N)]
+        # Call tSort to store Topological Sort starting from all nodes
+        for i in range(self.N):
+            if (visited[i] == False):
+                self.tSort(i,visited,stack)
+        # Initialize distances to all nodes as infinite and
+        # distance to source as 0
+        dist[0] = 0
+        # Process nodes in topological order
+        while (len(stack) > 0):
+            # Get the next node from topological order
+            u = stack[-1]
+            del stack[-1]
+            # Update distances of all adjacent nodes
+            if (dist[u] != 10**9):
+                for i in self.adj[u]:
+                    if (dist[i[0]] < dist[u] + 1):
+                        dist[i[0]] = dist[u] + 1
+                        self.longestnodesNonedic[i[0]] = u               
+                self.longestNone_dic[None] = dist[self.N-1]
+        #self.longestNone_dic[None] = dist[self.N-1]
+
+        j = self.N - 1
+        self.longpathsNone[None].append(j)
+        while True:
+            previous_node = self.longestnodesNonedic[j]
+            self.longpaths[None].append(previous_node)
+            j = previous_node
+            if previous_node == 0:
+                break
+        self.longpaths[None] = self.longpaths[None][::-1]
+
     def show(self,ps):
         for p in ps:
             with plt.style.context('ggplot'):
@@ -213,12 +287,10 @@ class DAG:
                     plt.arrow(self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i]][1],self.nodes[self.shortpaths[p][i+1]][0]-self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i+1]][1]-self.nodes[self.shortpaths[p][i]][1],width=0.005,length_includes_head=True,color='dodgerblue')
                     
     def l_scaling(self):
-        self.short()
         s_keys = list(self.shortest_dic.keys())
         s_vals = [self.shortest_dic[j] for j in s_keys]
         s_geodesic_vals = [self.geodesic_dic[j] for j in s_keys]
         s_norm_vals = [i/j for i,j in zip(s_vals,s_geodesic_vals)]
-        self.long()
         l_keys = list(self.longest_dic.keys())
         l_vals = [self.longest_dic[j] for j in l_keys]
         l_geodesic_vals = [self.geodesic_dic[j] for j in l_keys]
@@ -258,13 +330,22 @@ class DAG:
             plt.axvline(x=1,color='black',linestyle='--')
             plt.legend()
             plt.show()
+            
+    def investigate(self,ps):
+        self.minkowski(ps)
+        self.short(True,ps)
+        self.long(True,ps)
+        self.l_scaling()
+        self.rss_scaling(ps)
  
 #%%
 
-ps = np.linspace(0.5,2.5,1000)
-X = DAG(10000)
+ps = [0.5,2.5]
+X = DAG(100)
 X.minkowski(ps)
 X.short(True,ps)
 X.long(True,ps)
+X.shortnum(ps)
+X.longnum(ps)
 X.l_scaling()
 X.rss_scaling(ps)
