@@ -28,6 +28,8 @@ class DAG:
         self.N = N
         self.nodes = defaultdict(list)
         self.adj = defaultdict(list)
+        self.sources = defaultdict(list)
+        self.sinks = defaultdict(list)
         self.shortest_dic = defaultdict(list)
         self.shortestNone_dic = defaultdict(list)
         self.longest_dic = defaultdict(list)
@@ -41,17 +43,26 @@ class DAG:
         self.longpathsNone = defaultdict(list)
         self.longestnodespdic = [defaultdict(list) for i in range(self.N)]
         self.longestnodesNonedic = defaultdict(list)
+        self.greedy_short_path_length = defaultdict(list)
+        self.greedy_short_path_dic = defaultdict(list)
+        self.greedy_long_path_length = defaultdict(list)
+        self.greedy_long_path_dic = defaultdict(list)
+
         np.random.seed(1)
         
         # Generate random nodes
         self.t,self.s = [],[]
         self.nodes[0] = [0,0]
+        self.sources[0] = True
+        self.sinks[0] = True
         for i in range(1,self.N-1):
             x,y = np.random.uniform(0,1,2)
             self.t.append(x)
             self.s.append(y)
             self.nodes[i] = [x,y]
         self.nodes[self.N-1] = [1,1]
+        self.sources[self.N-1] = True
+        self.sinks[self.N-1] = True
         
         # Generate edges using cube rule in adjacency dictionary
         for i in range(self.N):
@@ -62,8 +73,11 @@ class DAG:
                 dy = sink[1] - source[1]
                 if dx > 0 and dy > 0:
                     dist = np.sqrt((dx * dx) + (dy * dy))
-                    R = 3 / np.sqrt(self.N)
+                    #R = 3 / np.sqrt(self.N)
+                    R = 1
                     if dist < R: 
+                        self.sources[i] = True
+                        self.sinks[j] = True
                         d_dict = defaultdict(list)
                         #d_dict[2] = dist
                         self.geodesic_dic[2] = np.sqrt(2)
@@ -72,6 +86,54 @@ class DAG:
                         continue
                 else:
                     continue
+        '''
+        self.adj = {key: value for key, value in self.adj.items() if self.sources[key] == True and self.sinks[key] == True}
+        self.nodes = {key: value for key, value in self.nodes.items() if self.sources[key] == True and self.sinks[key] == True}
+        '''
+        deletion_number = 1
+        i = 0
+        while deletion_number != 0:
+            print(i)
+            delete_nodes = []
+            deletion_number = 0
+            for node in self.adj.keys():
+                print(node)
+                delete_list = []
+                for i in range(len(self.adj[node])):
+                    current_node = self.adj[node][i][0]
+                    if self.sources[current_node] != True:
+                        delete_list.append(i)
+                        deletion_number = deletion_number + 1
+                delete_list = delete_list[::-1]
+                for delete in delete_list:
+                    del self.adj[node][delete]
+                    
+                    
+                if self.adj[node] == []:
+                    delete_nodes.append(node)
+                    self.sources[node] = False
+            for delete in delete_nodes:
+                del self.adj[delete]
+                del self.nodes[delete]
+            i = i+1
+        
+        delete_list = []
+        for node in self.nodes:
+            if self.sinks[node] != True:
+                delete_list.append(node)
+        for delete in delete_list:
+            del self.nodes[delete]
+            del self.adj[delete]
+        '''
+        self.adjold = self.adj
+        self.adjnew = {key: value for key, value in self.adj.items() if value != []}  
+        self.adj = self.adjnew
+        while self.adjnew != self.adjold:
+            self.adjold = self.adj
+            self.adjnew = {key: value for key, value in self.adj.items() if value != []}
+            self.adj = self.adjnew
+        '''  
+            
 
         
         # # Reduce generated DAG to interval
@@ -263,6 +325,40 @@ class DAG:
                 break
         self.longpathsNone[None] = self.longpathsNone[None][::-1]
 
+    def greedy_short(self,ps):
+        for p in ps:
+            current_node = 0
+            greedy_length = 0
+            while current_node != self.N-1:
+                edge = np.inf
+                for i in range(len(greedy_adj[current_node])):
+                    new_edge = greedy_adj[current_node][i][1][p]
+                    if new_edge < edge:
+                        edge = new_edge
+                        next_node = greedy_adj[current_node][i][0]
+                self.greedy_short_path_dic[p].append(next_node)
+                greedy_length = greedy_length + edge
+                old_node = current_node
+                current_node = next_node
+            self.greedy_short_path_length[p] = greedy_length
+            
+    def greedy_long(self,ps):
+        greedy_adj = {key: value for key, value in self.adj.items() if value != []}
+        for p in ps:
+            current_node = 0
+            greedy_length = 0
+            while current_node != self.N-1:
+                edge = 0
+                for i in range(len(greedy_adj[current_node])):
+                    new_edge = greedy_adj[current_node][i][1][p]
+                    if new_edge > edge:
+                        edge = new_edge
+                        next_node = greedy_adj[current_node][i][0]
+                self.greedy_long_path_dic[p].append(next_node)
+                greedy_length = greedy_length + edge
+                current_node = next_node
+            self.greedy_long_path_length[p] = greedy_length
+            
     def show(self,ps,showedges=False,showdistances=False):
         for p in ps:
             with plt.style.context('ggplot'):
@@ -276,11 +372,9 @@ class DAG:
                 plt.ylim(-0.01,1.01)
                 plt.xticks([0,1])
                 plt.yticks([0,1])
-                plt.plot(self.t,self.s,'.',color='magenta')
+                for node in self.nodes:
+                    plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta')
                 plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black')
-                #for i in range(self.N-1):
-                    #for j in range(len(self.adj[i])):
-                        #plt.arrow(self.nodes[i][0],self.nodes[i][1],self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0],self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1],length_includes_head = True, color = 'black')
                 if showedges == True:
                     for i in range(self.N-1):
                         for j in range(len(self.adj[i])):
@@ -307,7 +401,8 @@ class DAG:
             plt.ylim(-0.01,1.01)
             plt.xticks([0,1])
             plt.yticks([0,1])
-            plt.plot(self.t,self.s,'.',color='magenta')
+            for node in self.nodes:
+                plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta')
             plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black')
             #for i in range(self.N-1):
                 #for j in range(len(self.adj[i])):
@@ -381,13 +476,15 @@ class DAG:
 #%%
 
 ps = [0.5,2.5]
-X = DAG(5000)
+X = DAG(15)
 X.minkowski(ps)
 X.short(True,ps)
 X.long(True,ps)
+#X.greedy_short(ps)
+#X.greedy_long(ps)
 X.shortnum()
 X.longnum()
 X.l_scaling()
 X.rss_scaling(ps)
-X.show(ps,showdistances=True)
-X.shownum(ps,showdistances=True)
+X.show(ps,showdistances=True,showedges=True)
+#X.shownum(ps,showdistances=True,showedges=True)
