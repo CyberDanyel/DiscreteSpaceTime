@@ -197,7 +197,7 @@ class DAG:
                 self.longpaths[p] = self.longpaths[p][::-1]
 
 
-    def shortnum(self,ps):
+    def shortnum(self):
             visited = [False]*self.N
             stack =[]
             # Call tSort to store Topological Sort starting from source
@@ -227,7 +227,7 @@ class DAG:
                     break
             self.shortpathsNone[None] = self.shortpathsNone[None][::-1]
 
-    def longnum(self,ps):
+    def longnum(self):
         # Mark all nodes as not visited
         visited = [False]*self.N
         stack =[]
@@ -257,13 +257,13 @@ class DAG:
         self.longpathsNone[None].append(j)
         while True:
             previous_node = self.longestnodesNonedic[j]
-            self.longpaths[None].append(previous_node)
+            self.longpathsNone[None].append(previous_node)
             j = previous_node
             if previous_node == 0:
                 break
-        self.longpaths[None] = self.longpaths[None][::-1]
+        self.longpathsNone[None] = self.longpathsNone[None][::-1]
 
-    def show(self,ps):
+    def show(self,ps,showedges=False,showdistances=False):
         for p in ps:
             with plt.style.context('ggplot'):
                 plt.figure(dpi=540)
@@ -281,11 +281,51 @@ class DAG:
                 #for i in range(self.N-1):
                     #for j in range(len(self.adj[i])):
                         #plt.arrow(self.nodes[i][0],self.nodes[i][1],self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0],self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1],length_includes_head = True, color = 'black')
+                if showedges == True:
+                    for i in range(self.N-1):
+                        for j in range(len(self.adj[i])):
+                            plt.arrow(self.nodes[i][0],self.nodes[i][1],self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0],self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1],length_includes_head = True, color = 'red')
+
                 for i in range(len(self.longpaths[p])-1):
                     plt.arrow(self.nodes[self.longpaths[p][i]][0],self.nodes[self.longpaths[p][i]][1],self.nodes[self.longpaths[p][i+1]][0]-self.nodes[self.longpaths[p][i]][0],self.nodes[self.longpaths[p][i+1]][1]-self.nodes[self.longpaths[p][i]][1],width=0.005,length_includes_head=True,color='darkorange')
                 for i in range(len(self.shortpaths[p])-1):
                     plt.arrow(self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i]][1],self.nodes[self.shortpaths[p][i+1]][0]-self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i+1]][1]-self.nodes[self.shortpaths[p][i]][1],width=0.005,length_includes_head=True,color='dodgerblue')
-                    
+                if showdistances == True:                   
+                    print('Shortest distance for p=' + str(p) + ': ' + str(self.shortest_dic[p]))            
+                    print('Longest distance for p=' + str(p) + ': ' + str(self.longest_dic[p]))
+                    print('')            
+
+    def shownum(self,ps,showedges=False,showdistances=False):     
+        with plt.style.context('ggplot'):
+            plt.figure(dpi=540)
+            ax = plt.gca()
+            ax.set_aspect('equal',adjustable='box')
+            plt.grid(False)
+            plt.xlabel(r'$x$')
+            plt.ylabel(r'$ct$')
+            plt.xlim(-0.01,1.01)
+            plt.ylim(-0.01,1.01)
+            plt.xticks([0,1])
+            plt.yticks([0,1])
+            plt.plot(self.t,self.s,'.',color='magenta')
+            plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black')
+            #for i in range(self.N-1):
+                #for j in range(len(self.adj[i])):
+                    #plt.arrow(self.nodes[i][0],self.nodes[i][1],self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0],self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1],length_includes_head = True, color = 'black')
+            if showedges == True:
+                for i in range(self.N-1):
+                    for j in range(len(self.adj[i])):
+                        plt.arrow(self.nodes[i][0],self.nodes[i][1],self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0],self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1],length_includes_head = True, color = 'red')
+      
+            for i in range(len(self.longpathsNone[None])-1):
+                plt.arrow(self.nodes[self.longpathsNone[None][i]][0],self.nodes[self.longpathsNone[None][i]][1],self.nodes[self.longpathsNone[None][i+1]][0]-self.nodes[self.longpathsNone[None][i]][0],self.nodes[self.longpathsNone[None][i+1]][1]-self.nodes[self.longpathsNone[None][i]][1],width=0.005,length_includes_head=True,color='darkorange')
+            for i in range(len(self.shortpathsNone[None])-1):
+                plt.arrow(self.nodes[self.shortpathsNone[None][i]][0],self.nodes[self.shortpathsNone[None][i]][1],self.nodes[self.shortpathsNone[None][i+1]][0]-self.nodes[self.shortpathsNone[None][i]][0],self.nodes[self.shortpathsNone[None][i+1]][1]-self.nodes[self.shortpathsNone[None][i]][1],width=0.005,length_includes_head=True,color='dodgerblue')
+            if showdistances == True:
+                print('Shortest distance: ' + str(self.shortestNone_dic[None]) + ' nodes')            
+                print('Longest distance: ' + str(self.longestNone_dic[None]) + ' nodes')
+                print('')
+            
     def l_scaling(self):
         s_keys = list(self.shortest_dic.keys())
         s_vals = [self.shortest_dic[j] for j in s_keys]
@@ -341,11 +381,13 @@ class DAG:
 #%%
 
 ps = [0.5,2.5]
-X = DAG(100)
+X = DAG(5000)
 X.minkowski(ps)
 X.short(True,ps)
 X.long(True,ps)
-X.shortnum(ps)
-X.longnum(ps)
+X.shortnum()
+X.longnum()
 X.l_scaling()
 X.rss_scaling(ps)
+X.show(ps,showdistances=True)
+X.shownum(ps,showdistances=True)
