@@ -48,7 +48,7 @@ class DAG:
         self.greedy_long_path_length = defaultdict(list)
         self.greedy_long_path_dic = defaultdict(list)
 
-        np.random.seed(1)
+        np.random.seed(3)
         
         # Generate random nodes
         self.t,self.s = [],[]
@@ -60,6 +60,8 @@ class DAG:
             self.t.append(x)
             self.s.append(y)
             self.nodes[i] = [x,y]
+            self.sources[i] = False
+            self.sinks[i] = False
         self.nodes[self.N-1] = [1,1]
         self.sources[self.N-1] = True
         self.sinks[self.N-1] = True
@@ -67,6 +69,7 @@ class DAG:
         # Generate edges using cube rule in adjacency dictionary
         for i in range(self.N):
             for j in range(self.N):
+                print(i)
                 source = self.nodes[i]
                 sink = self.nodes[j]
                 dx = sink[0] - source[0]
@@ -74,7 +77,7 @@ class DAG:
                 if dx > 0 and dy > 0:
                     dist = np.sqrt((dx * dx) + (dy * dy))
                     #R = 3 / np.sqrt(self.N)
-                    R = 1
+                    R = 0.5
                     if dist < R: 
                         self.sources[i] = True
                         self.sinks[j] = True
@@ -116,14 +119,19 @@ class DAG:
                 del self.adj[delete]
                 del self.nodes[delete]
             i = i+1
-        
-        delete_list = []
-        for node in self.nodes:
-            if self.sinks[node] != True:
-                delete_list.append(node)
-        for delete in delete_list:
-            del self.nodes[delete]
-            del self.adj[delete]
+        while True:
+            delete_list = []
+            delete_num = 0
+            for node in self.nodes:
+                print(node)
+                if self.sinks[node] != True:   
+                    delete_list.append(node)
+                    delete_num = delete_num + 1
+            if delete_num == 0:
+                break
+            for delete in delete_list:
+                del self.nodes[delete]
+                del self.adj[delete]
         '''
         self.adjold = self.adj
         self.adjnew = {key: value for key, value in self.adj.items() if value != []}  
@@ -373,7 +381,8 @@ class DAG:
                 plt.xticks([0,1])
                 plt.yticks([0,1])
                 for node in self.nodes:
-                    plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta')
+                    if self.sinks[node] and self.sources[node] == True:
+                        plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta')
                 plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black')
                 if showedges == True:
                     for i in range(self.N-1):
@@ -476,7 +485,7 @@ class DAG:
 #%%
 
 ps = [0.5,2.5]
-X = DAG(15)
+X = DAG(30)
 X.minkowski(ps)
 X.short(True,ps)
 X.long(True,ps)
