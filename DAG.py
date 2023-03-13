@@ -8,8 +8,12 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from collections import defaultdict
+import time as time
+from scipy.optimize import curve_fit
+
+def linear(x,m,c):
+    return (m * x) + c
 
 plt.style.use('gangaplot')
 
@@ -45,14 +49,11 @@ class DAG:
         np.random.seed(3)
         
         # Generate random nodes
-        self.t,self.s = [],[]
         self.nodes[0] = [0,0]
         self.sources[0] = True
         self.sinks[0] = True
         for i in range(1,self.N-1):
             x,y = np.random.uniform(0,1,2)
-            self.t.append(x)
-            self.s.append(y)
             self.nodes[i] = [x,y]
             self.sources[i] = False
             self.sinks[i] = False
@@ -69,8 +70,8 @@ class DAG:
                 dy = sink[1] - source[1]
                 if dx > 0 and dy > 0:
                     dist = np.sqrt((dx * dx) + (dy * dy))
-                    #R = 3 / np.sqrt(self.N)
-                    R = 0.5
+                    R = 3 / np.sqrt(self.N)
+                    #R = 0.5
                     if dist < R: 
                         self.sources[i] = True
                         self.sinks[j] = True
@@ -82,54 +83,42 @@ class DAG:
                         continue
                 else:
                     continue
-        '''
-        self.adj = {key: value for key, value in self.adj.items() if self.sources[key] == True and self.sinks[key] == True}
-        self.nodes = {key: value for key, value in self.nodes.items() if self.sources[key] == True and self.sinks[key] == True}
-        '''
-        deletion_number = 1
-        i = 0
-        while deletion_number != 0:
-            delete_nodes = []
-            deletion_number = 0
-            for node in self.adj.keys():
-                delete_list = []
-                for i in range(len(self.adj[node])):
-                    current_node = self.adj[node][i][0]
-                    if self.sources[current_node] != True:
-                        delete_list.append(i)
-                        deletion_number = deletion_number + 1
-                delete_list = delete_list[::-1]
-                for delete in delete_list:
-                    del self.adj[node][delete]    
+
+        # deletion_number = 1
+        # i = 0
+        # while deletion_number != 0:
+        #     delete_nodes = []
+        #     deletion_number = 0
+        #     for node in self.adj.keys():
+        #         delete_list = []
+        #         for i in range(len(self.adj[node])):
+        #             current_node = self.adj[node][i][0]
+        #             if self.sources[current_node] != True:
+        #                 delete_list.append(i)
+        #                 deletion_number = deletion_number + 1
+        #         delete_list = delete_list[::-1]
+        #         for delete in delete_list:
+        #             del self.adj[node][delete]    
                     
-                if self.adj[node] == []:
-                    delete_nodes.append(node)
-                    self.sources[node] = False
-            for delete in delete_nodes:
-                del self.adj[delete]
-                del self.nodes[delete]
-            i = i+1
-        while True:
-            delete_list = []
-            delete_num = 0
-            for node in self.nodes:
-                if self.sinks[node] != True:   
-                    delete_list.append(node)
-                    delete_num = delete_num + 1
-            if delete_num == 0:
-                break
-            for delete in delete_list:
-                del self.nodes[delete]
-                del self.adj[delete]
-        '''
-        self.adjold = self.adj
-        self.adjnew = {key: value for key, value in self.adj.items() if value != []}  
-        self.adj = self.adjnew
-        while self.adjnew != self.adjold:
-            self.adjold = self.adj
-            self.adjnew = {key: value for key, value in self.adj.items() if value != []}
-            self.adj = self.adjnew
-        '''  
+        #         if self.adj[node] == []:
+        #             delete_nodes.append(node)
+        #             self.sources[node] = False
+        #     for delete in delete_nodes:
+        #         del self.adj[delete]
+        #         del self.nodes[delete]
+        #     i = i+1
+        # while True:
+        #     delete_list = []
+        #     delete_num = 0
+        #     for node in self.nodes:
+        #         if self.sinks[node] != True:   
+        #             delete_list.append(node)
+        #             delete_num = delete_num + 1
+        #     if delete_num == 0:
+        #         break
+        #     for delete in delete_list:
+        #         del self.nodes[delete]
+        #         del self.adj[delete]
                 
     def minkowski(self,ps):
         for p in ps:
@@ -279,7 +268,6 @@ class DAG:
                         dist[i[0]] = dist[u] + 1
                         self.longestnodesNonedic[i[0]] = u               
                 self.longestNone_dic[None] = dist[self.N-1]
-        #self.longestNone_dic[None] = dist[self.N-1]
 
         j = self.N - 1
         self.longpathsNone[None].append(j)
@@ -290,8 +278,10 @@ class DAG:
             if previous_node == 0:
                 break
         self.longpathsNone[None] = self.longpathsNone[None][::-1]
+        
 
     def greedy_short(self,ps):
+        greedy_adj = {key: value for key, value in self.adj.items() if value != []}
         for p in ps:
             current_node = 0
             greedy_length = 0
@@ -304,7 +294,6 @@ class DAG:
                         next_node = greedy_adj[current_node][i][0]
                 self.greedy_short_path_dic[p].append(next_node)
                 greedy_length = greedy_length + edge
-                old_node = current_node
                 current_node = next_node
             self.greedy_short_path_length[p] = greedy_length
             
@@ -337,7 +326,7 @@ class DAG:
             plt.yticks([0,1])
             for node in self.nodes:
                 if self.sinks[node] and self.sources[node] == True:
-                    plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta',alpha=0.01)
+                    plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta',alpha=0.1)
             plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black',label='Geodesic')
             plt.arrow(0,0,0,0,color='dodgerblue',label='Shortest')
             plt.arrow(0,0,0,0,color='darkorange',label='Longest')
@@ -365,7 +354,9 @@ class DAG:
         plt.ylim(0,1)
         plt.xticks([0,1])
         plt.yticks([0,1])
-        plt.plot(self.t,self.s,'.',color='magenta',alpha=0.001)
+        for node in self.nodes:
+            if self.sinks[node] and self.sources[node] == True:
+                plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta',alpha=0.1)
         plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black',label='Geodesic')
         plt.arrow(0,0,0,0,color='dodgerblue',label='Shortest')
         plt.arrow(0,0,0,0,color='darkorange',label='Longest')
@@ -384,6 +375,37 @@ class DAG:
             print('Longest distance: ' + str(self.longestNone_dic[None]) + ' nodes')
             print('')
             
+    def showgreedy(self,ps,showedges=False,showdistances=False):
+        for p in ps:
+            ax = plt.gca()
+            ax.set_aspect('equal',adjustable='box')
+            plt.xlabel(r'$x$',fontsize=18)
+            plt.ylabel(r'$ct$',rotation=0,ha='right',fontsize=18)
+            plt.xlim(0,1)
+            plt.ylim(0,1)
+            plt.xticks([0,1])
+            plt.yticks([0,1])
+            for node in self.nodes:
+                if self.sinks[node] and self.sources[node] == True:
+                    plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta',alpha=0.1)
+            plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black',label='Geodesic')
+            plt.arrow(0,0,0,0,color='dodgerblue',label='Shortest')
+            plt.arrow(0,0,0,0,color='darkorange',label='Longest')
+            if showedges == True:
+                for i in range(self.N-1):
+                    for j in range(len(self.adj[i])):
+                        plt.arrow(self.nodes[i][0],self.nodes[i][1],self.nodes[self.adj[i][j][0]][0]-self.nodes[i][0],self.nodes[self.adj[i][j][0]][1]-self.nodes[i][1],length_includes_head = True, color = 'red')
+            for i in range(len(self.greedy_short_path_dic[p])-1):
+                plt.arrow(self.nodes[self.greedy_short_path_dic[p][i]][0],self.nodes[self.greedy_short_path_dic[p][i]][1],self.nodes[self.greedy_short_path_dic[p][i+1]][0]-self.nodes[self.greedy_short_path_dic[p][i]][0],self.nodes[self.greedy_short_path_dic[p][i+1]][1]-self.nodes[self.greedy_short_path_dic[p][i]][1],width=0.005,length_includes_head=True,color='darkorange')
+            for i in range(len(self.greedy_long_path_dic[p])-1):
+                plt.arrow(self.nodes[self.greedy_long_path_dic[p][i]][0],self.nodes[self.greedy_long_path_dic[p][i]][1],self.nodes[self.greedy_long_path_dic[p][i+1]][0]-self.nodes[self.greedy_long_path_dic[p][i]][0],self.nodes[self.greedy_long_path_dic[p][i+1]][1]-self.nodes[self.greedy_long_path_dic[p][i]][1],width=0.005,length_includes_head=True,color='dodgerblue')
+            plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0)
+            plt.show()
+            if showdistances == True:                   
+                print('Shortest distance for p=' + str(p) + ': ' + str(self.shortest_dic[p]))            
+                print('Longest distance for p=' + str(p) + ': ' + str(self.longest_dic[p]))
+                print('')     
+            
     def l_scaling(self):
         s_keys = list(self.shortest_dic.keys())
         s_vals = [self.shortest_dic[j] for j in s_keys]
@@ -398,7 +420,23 @@ class DAG:
         plt.plot(s_keys,s_norm_vals,'.',color='dodgerblue',label='Shortest')
         plt.plot(l_keys,l_norm_vals,'.',color='darkorange',label='Longest')
         plt.axvline(x=1,color='black',linestyle='--')
-        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0)
+        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
+        plt.show()
+        
+        s_keys = list(self.greedy_short_path_length.keys())
+        s_vals = [self.greedy_short_path_length[j] for j in s_keys]
+        s_geodesic_vals = [self.geodesic_dic[j] for j in s_keys]
+        s_norm_vals = [i/j for i,j in zip(s_vals,s_geodesic_vals)]
+        l_keys = list(self.greedy_long_path_length.keys())
+        l_vals = [self.greedy_long_path_length[j] for j in l_keys]
+        l_geodesic_vals = [self.geodesic_dic[j] for j in l_keys]
+        l_norm_vals = [i/j for i,j in zip(l_vals,l_geodesic_vals)]
+        plt.xlabel(r'$p$',fontsize=18)
+        plt.ylabel(r'$\frac{\ell}{\ell_g}$',rotation=0,ha='right',fontsize=18)
+        plt.plot(s_keys,s_norm_vals,'.',color='dodgerblue',label='Shortest')
+        plt.plot(l_keys,l_norm_vals,'.',color='darkorange',label='Longest')
+        plt.axvline(x=1,color='black',linestyle='--')
+        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
         plt.show()
             
     def rss_scaling(self,ps):
@@ -420,27 +458,77 @@ class DAG:
         plt.plot(ps,s,'.',color='dodgerblue',label='Shortest')
         plt.plot(ps,l,'.',color='darkorange',label='Longest')
         plt.axvline(x=1,color='black',linestyle='--')
-        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0)
+        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
+        plt.show()
+        
+        s_rss = defaultdict(list)
+        l_rss = defaultdict(list)
+        for p in ps:
+            s_rss[p] = 0
+            l_rss[p] = 0
+            shortpath = self.greedy_short_path_dic[p]
+            longpath = self.greedy_long_path_dic[p]
+            for i in range(len(shortpath)):
+                s_rss[p] += ((self.nodes[shortpath[i]][1] - self.nodes[shortpath[i]][0])**2)
+            for i in range(len(longpath)):    
+                l_rss[p] += ((self.nodes[longpath[i]][1] - self.nodes[longpath[i]][0])**2)  
+        s = [s_rss[j] for j in ps]
+        l = [l_rss[j] for j in ps]
+        plt.xlabel(r'$p$',fontsize=18)
+        plt.ylabel(r'RSS',rotation=0,ha='right',fontsize=18)
+        plt.plot(ps,s,'.',color='dodgerblue',label='Shortest')
+        plt.plot(ps,l,'.',color='darkorange',label='Longest')
+        plt.axvline(x=1,color='black',linestyle='--')
+        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
         plt.show()
             
     def investigate(self,ps,showdistances=False):
         pshow = [ps[0],ps[-1]]
         self.minkowski(ps)
-        
         self.short(True,ps)
         self.long(True,ps)
-        #self.greedy_short(ps)
-        #self.greedy_long(ps)
+        self.greedy_short(ps)
+        self.greedy_long(ps)
         self.shortnum()
         self.longnum()
-        
         self.l_scaling()
-        self.rss_scaling(ps)
+        self.rss_scaling(ps)# print rss values for num too
         self.show(pshow,showdistances)
         self.shownum(pshow,showdistances)
+        self.showgreedy(pshow,showdistances)
         
+    def complexity(self,ps):        
+        s = time.time()
+        self.minkowski(ps)
+        self.long(True,ps)
+        e = time.time()
+        t = e - s
+        return t
+                
 #%%
 
 ps = np.linspace(-0.5,2.5,100)
-X = DAG(3000)
-X.investigate(ps)
+X = DAG(10000)
+X.investigation(ps)
+
+#%%
+
+sizes = np.linspace(1000,100000,10,dtype=int)
+times = []
+num = 10
+
+for i in sizes:
+    t = []
+    for j in range(num):
+        t.append(DAG(i).complexity([1]))
+    times.append(np.mean(t))
+    
+plt.xlabel(r'$N$',fontsize=18)
+plt.ylabel(r'$t\,[\mathrm{s}]$',rotation=0,ha='right',fontsize=18)
+plt.scatter(sizes,times,label='Data')
+n = np.linspace(sizes[0],sizes[-1],100)
+fit,cov = curve_fit(linear,sizes,times)
+plt.plot(n,linear(n,*fit),color='dodgerblue',label='Curve Fit')
+plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=18)
+plt.show()
+print (fit)
