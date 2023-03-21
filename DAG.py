@@ -318,15 +318,15 @@ class DAG:
         for p in ps:
             ax = plt.gca()
             ax.set_aspect('equal',adjustable='box')
-            plt.xlabel(r'$x$',fontsize=18)
-            plt.ylabel(r'$ct$',rotation=0,ha='right',fontsize=18)
+            plt.xlabel(r'$x$',fontsize=22)
+            plt.ylabel(r'$ct$',rotation=0,ha='right',fontsize=22)
             plt.xlim(0,1)
             plt.ylim(0,1)
             plt.xticks([0,1])
             plt.yticks([0,1])
             for node in self.nodes:
                 if self.sinks[node] and self.sources[node] == True:
-                    plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta',alpha=0.1)
+                    plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta',alpha=0.05)
             plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black',label='Geodesic')
             plt.arrow(0,0,0,0,color='dodgerblue',label='Shortest')
             plt.arrow(0,0,0,0,color='darkorange',label='Longest')
@@ -338,14 +338,14 @@ class DAG:
                 plt.arrow(self.nodes[self.longpaths[p][i]][0],self.nodes[self.longpaths[p][i]][1],self.nodes[self.longpaths[p][i+1]][0]-self.nodes[self.longpaths[p][i]][0],self.nodes[self.longpaths[p][i+1]][1]-self.nodes[self.longpaths[p][i]][1],width=0.005,length_includes_head=True,color='darkorange')
             for i in range(len(self.shortpaths[p])-1):
                 plt.arrow(self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i]][1],self.nodes[self.shortpaths[p][i+1]][0]-self.nodes[self.shortpaths[p][i]][0],self.nodes[self.shortpaths[p][i+1]][1]-self.nodes[self.shortpaths[p][i]][1],width=0.005,length_includes_head=True,color='dodgerblue')
-            plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0)
+            plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
             plt.show()     
             if showdistances == True:                   
                 print('Shortest distance for p=' + str(p) + ': ' + str(self.shortest_dic[p]))            
                 print('Longest distance for p=' + str(p) + ': ' + str(self.longest_dic[p]))
                 print('') 
 
-    def shownum(self,ps,showedges=False,showdistances=False):     
+    def shownum(self,showedges=False,showdistances=False):     
         ax = plt.gca()
         ax.set_aspect('equal',adjustable='box')
         plt.xlabel(r'$x$',fontsize=18)
@@ -356,7 +356,7 @@ class DAG:
         plt.yticks([0,1])
         for node in self.nodes:
             if self.sinks[node] and self.sources[node] == True:
-                plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta',alpha=0.1)
+                plt.plot(self.nodes[node][0],self.nodes[node][1],'.',color='magenta',alpha=0.05)
         plt.arrow(0,0,1,1,width=0.005,length_includes_head=True,color='black',label='Geodesic')
         plt.arrow(0,0,0,0,color='dodgerblue',label='Shortest')
         plt.arrow(0,0,0,0,color='darkorange',label='Longest')
@@ -368,7 +368,7 @@ class DAG:
             plt.arrow(self.nodes[self.longpathsNone[None][i]][0],self.nodes[self.longpathsNone[None][i]][1],self.nodes[self.longpathsNone[None][i+1]][0]-self.nodes[self.longpathsNone[None][i]][0],self.nodes[self.longpathsNone[None][i+1]][1]-self.nodes[self.longpathsNone[None][i]][1],width=0.005,length_includes_head=True,color='darkorange')
         for i in range(len(self.shortpathsNone[None])-1):
             plt.arrow(self.nodes[self.shortpathsNone[None][i]][0],self.nodes[self.shortpathsNone[None][i]][1],self.nodes[self.shortpathsNone[None][i+1]][0]-self.nodes[self.shortpathsNone[None][i]][0],self.nodes[self.shortpathsNone[None][i+1]][1]-self.nodes[self.shortpathsNone[None][i]][1],width=0.005,length_includes_head=True,color='dodgerblue')
-        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0)
+        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0.5)
         plt.show()
         if showdistances == True:
             print('Shortest distance: ' + str(self.shortestNone_dic[None]) + ' nodes')            
@@ -415,87 +415,97 @@ class DAG:
         l_vals = [self.longest_dic[j] for j in l_keys]
         l_geodesic_vals = [self.geodesic_dic[j] for j in l_keys]
         l_norm_vals = [i/j for i,j in zip(l_vals,l_geodesic_vals)]
-        plt.xlabel(r'$p$',fontsize=18)
-        plt.ylabel(r'$\frac{\ell}{\ell_g}$',rotation=0,ha='right',fontsize=18)
+        plt.xlabel(r'$p$',fontsize=26)
+        plt.ylabel(r'$\frac{d}{d_g}$',rotation=0,ha='right',fontsize=26)
         plt.plot(s_keys,s_norm_vals,'.',color='dodgerblue',label='Shortest')
         plt.plot(l_keys,l_norm_vals,'.',color='darkorange',label='Longest')
         plt.axvline(x=1,color='black',linestyle='--')
-        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
+        plt.legend(fontsize=22)#bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
         plt.show()
         
-        s_keys = list(self.greedy_short_path_length.keys())
-        s_vals = [self.greedy_short_path_length[j] for j in s_keys]
-        s_geodesic_vals = [self.geodesic_dic[j] for j in s_keys]
-        s_norm_vals = [i/j for i,j in zip(s_vals,s_geodesic_vals)]
-        l_keys = list(self.greedy_long_path_length.keys())
-        l_vals = [self.greedy_long_path_length[j] for j in l_keys]
-        l_geodesic_vals = [self.geodesic_dic[j] for j in l_keys]
-        l_norm_vals = [i/j for i,j in zip(l_vals,l_geodesic_vals)]
-        plt.xlabel(r'$p$',fontsize=18)
-        plt.ylabel(r'$\frac{\ell}{\ell_g}$',rotation=0,ha='right',fontsize=18)
-        plt.plot(s_keys,s_norm_vals,'.',color='dodgerblue',label='Shortest')
-        plt.plot(l_keys,l_norm_vals,'.',color='darkorange',label='Longest')
-        plt.axvline(x=1,color='black',linestyle='--')
-        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
-        plt.show()
+        # s_keys = list(self.greedy_short_path_length.keys())
+        # s_vals = [self.greedy_short_path_length[j] for j in s_keys]
+        # s_geodesic_vals = [self.geodesic_dic[j] for j in s_keys]
+        # s_norm_vals = [i/j for i,j in zip(s_vals,s_geodesic_vals)]
+        # l_keys = list(self.greedy_long_path_length.keys())
+        # l_vals = [self.greedy_long_path_length[j] for j in l_keys]
+        # l_geodesic_vals = [self.geodesic_dic[j] for j in l_keys]
+        # l_norm_vals = [i/j for i,j in zip(l_vals,l_geodesic_vals)]
+        # plt.xlabel(r'$p$',fontsize=18)
+        # plt.ylabel(r'$\frac{\ell}{\ell_g}$',rotation=0,ha='right',fontsize=18)
+        # plt.plot(s_keys,s_norm_vals,'.',color='dodgerblue',label='Shortest')
+        # plt.plot(l_keys,l_norm_vals,'.',color='darkorange',label='Longest')
+        # plt.axvline(x=1,color='black',linestyle='--')
+        # plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
+        # plt.show()
             
     def rss_scaling(self,ps):
-        s_rss = defaultdict(list)
-        l_rss = defaultdict(list)
-        for p in ps:
-            s_rss[p] = 0
-            l_rss[p] = 0
-            shortpath = self.shortpaths[p]
-            longpath = self.longpaths[p]
-            for i in range(len(shortpath)):
-                s_rss[p] += ((self.nodes[shortpath[i]][1] - self.nodes[shortpath[i]][0])**2)
-            for i in range(len(longpath)):    
-                l_rss[p] += ((self.nodes[longpath[i]][1] - self.nodes[longpath[i]][0])**2)  
-        s = [s_rss[j] for j in ps]
-        l = [l_rss[j] for j in ps]
-        plt.xlabel(r'$p$',fontsize=18)
-        plt.ylabel(r'RSS',rotation=0,ha='right',fontsize=18)
-        plt.plot(ps,s,'.',color='dodgerblue',label='Shortest')
-        plt.plot(ps,l,'.',color='darkorange',label='Longest')
-        plt.axvline(x=1,color='black',linestyle='--')
-        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
-        plt.show()
+        # s_rss = defaultdict(list)
+        # l_rss = defaultdict(list)
+        # for p in ps:
+        #     s_rss[p] = 0
+        #     l_rss[p] = 0
+        #     shortpath = self.shortpaths[p]
+        #     longpath = self.longpaths[p]
+        #     for i in range(len(shortpath)):
+        #         s_rss[p] += ((self.nodes[shortpath[i]][1] - self.nodes[shortpath[i]][0])**2)
+        #     for i in range(len(longpath)):    
+        #         l_rss[p] += ((self.nodes[longpath[i]][1] - self.nodes[longpath[i]][0])**2)  
+        # s = [s_rss[j] for j in ps]
+        # l = [l_rss[j] for j in ps]
+        # plt.xlabel(r'$p$',fontsize=26)
+        # plt.ylabel(r'RSS',rotation=0,ha='right',fontsize=26)
+        # plt.plot(ps,s,'.',color='dodgerblue',label='Shortest')
+        # plt.plot(ps,l,'.',color='darkorange',label='Longest')
+        # plt.axvline(x=1,color='black',linestyle='--')
+        # plt.legend(fontsize=22)#bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
+        # plt.show()
         
-        s_rss = defaultdict(list)
-        l_rss = defaultdict(list)
-        for p in ps:
-            s_rss[p] = 0
-            l_rss[p] = 0
-            shortpath = self.greedy_short_path_dic[p]
-            longpath = self.greedy_long_path_dic[p]
-            for i in range(len(shortpath)):
-                s_rss[p] += ((self.nodes[shortpath[i]][1] - self.nodes[shortpath[i]][0])**2)
-            for i in range(len(longpath)):    
-                l_rss[p] += ((self.nodes[longpath[i]][1] - self.nodes[longpath[i]][0])**2)  
-        s = [s_rss[j] for j in ps]
-        l = [l_rss[j] for j in ps]
-        plt.xlabel(r'$p$',fontsize=18)
-        plt.ylabel(r'RSS',rotation=0,ha='right',fontsize=18)
-        plt.plot(ps,s,'.',color='dodgerblue',label='Shortest')
-        plt.plot(ps,l,'.',color='darkorange',label='Longest')
-        plt.axvline(x=1,color='black',linestyle='--')
-        plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
-        plt.show()
+        s_rss = 0
+        l_rss = 0
+        shortpath = self.shortpathsNone[None]
+        longpath = self.longpathsNone[None]
+        for i in range(len(shortpath)):
+            s_rss += ((self.nodes[shortpath[i]][1] - self.nodes[shortpath[i]][0])**2)
+        for i in range(len(longpath)):    
+            l_rss += ((self.nodes[longpath[i]][1] - self.nodes[longpath[i]][0])**2)  
+        
+        print (s_rss,l_rss)
+        # s_rss = defaultdict(list)
+        # l_rss = defaultdict(list)
+        # for p in ps:
+        #     s_rss[p] = 0
+        #     l_rss[p] = 0
+        #     shortpath = self.greedy_short_path_dic[p]
+        #     longpath = self.greedy_long_path_dic[p]
+        #     for i in range(len(shortpath)):
+        #         s_rss[p] += ((self.nodes[shortpath[i]][1] - self.nodes[shortpath[i]][0])**2)
+        #     for i in range(len(longpath)):    
+        #         l_rss[p] += ((self.nodes[longpath[i]][1] - self.nodes[longpath[i]][0])**2)  
+        # s = [s_rss[j] for j in ps]
+        # l = [l_rss[j] for j in ps]
+        # plt.xlabel(r'$p$',fontsize=18)
+        # plt.ylabel(r'RSS',rotation=0,ha='right',fontsize=18)
+        # plt.plot(ps,s,'.',color='dodgerblue',label='Shortest')
+        # plt.plot(ps,l,'.',color='darkorange',label='Longest')
+        # plt.axvline(x=1,color='black',linestyle='--')
+        # plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=22)
+        # plt.show()
             
     def investigate(self,ps,showdistances=False):
-        pshow = [ps[0],ps[-1]]
-        self.minkowski(ps)
-        self.short(True,ps)
-        self.long(True,ps)
-        self.greedy_short(ps)
-        self.greedy_long(ps)
+        #pshow = [ps[0],ps[-1]]
+        #self.minkowski(ps)
+        #self.short(True,ps)
+        #self.long(True,ps)
+        #self.greedy_short(ps)
+        #self.greedy_long(ps)
         self.shortnum()
         self.longnum()
-        self.l_scaling()
+        #self.l_scaling()
         self.rss_scaling(ps)# print rss values for num too
-        self.show(pshow,showdistances)
-        self.shownum(pshow,showdistances)
-        self.showgreedy(pshow,showdistances)
+        #self.show(pshow,showdistances)
+        self.shownum(showdistances)
+        #self.showgreedy(pshow,showdistances)
         
     def complexity(self,ps):        
         s = time.time()
@@ -507,9 +517,9 @@ class DAG:
                 
 #%%
 
-ps = np.linspace(-0.5,2.5,100)
-X = DAG(10000)
-X.investigation(ps)
+ps = np.linspace(-0.5,2.5,5)
+X = DAG(30000)
+X.investigate(ps)
 
 #%%
 
@@ -532,3 +542,26 @@ plt.plot(n,linear(n,*fit),color='dodgerblue',label='Curve Fit')
 plt.legend(bbox_to_anchor=(1,0),loc="lower left",borderaxespad=0,fontsize=18)
 plt.show()
 print (fit)
+
+#%%
+
+sizes = np.linspace(1,100,100,dtype=int)
+times = []
+
+s = time.time()
+
+for i in sizes:
+    m = np.zeros((i,i))
+    n = np.linspace(1,i,i,dtype=int)
+    s = time.time()
+    for j in range(i):
+        for k in range(i):
+            m[j][k] = j * k
+    e = time.time()
+    times.append(e - s)
+    
+plt.xlabel(r'$N$')
+plt.ylabel(r'$t\,[\mathrm{s}]$',rotation=0,ha='right')
+plt.scatter(sizes,times,label='Data')
+plt.legend()
+plt.show()
